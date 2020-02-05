@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"image/color"
 	"image/gif"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -62,15 +64,28 @@ func main() {
 	goncurses.Cursor(0)
 	stdscr.ScrollOk(false)
 
-	// Read the Gif from the URL specified on the commandline
-	httpClient := http.Client{}
-	response, err := httpClient.Get(gifURL)
-	if err != nil {
-		panic(err)
+	var gifReader io.Reader
+
+	if strings.HasPrefix(gifURL, "http") {
+		// Read the Gif from the URL specified on the commandline
+		httpClient := http.Client{}
+		response, err := httpClient.Get(gifURL)
+		if err != nil {
+			panic(err)
+		}
+		gifReader = response.Body
+
+	} else {
+		file, err := os.Open(gifURL)
+		if err != nil {
+			panic(err)
+		}
+
+		gifReader = file
 	}
 
 	// Decode the GIF data from the response body
-	gif, err := gif.DecodeAll(response.Body)
+	gif, err := gif.DecodeAll(gifReader)
 	if err != nil {
 		panic(err)
 	}
