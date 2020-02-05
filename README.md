@@ -10,7 +10,7 @@ Forked from https://github.com/theMomax/asciiify
 * CLI now accepts commandline arguments:
 
 ```
-asciiify [GIF URL] [LOOP COUNT]
+asciiify [PATH or URL to GIF] [LOOP COUNT]
 ```
 
 ## Debian/Ubuntu Build Instructions

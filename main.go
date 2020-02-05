@@ -28,7 +28,7 @@ func main() {
 
 	// Process Commandline Args
 	if len(os.Args) == 1 {
-		fmt.Println("Usage: asciiify [GIF URL] [LOOP COUNT]")
+		fmt.Println("Usage: asciiify [GIF PATH or URL] [LOOP COUNT]")
 		return
 	}
 	if len(os.Args) > 1 {
