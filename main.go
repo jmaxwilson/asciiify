@@ -1,11 +1,13 @@
 package main
 
 import (
-	"bytes"
+	"fmt"
 	"image/color"
 	"image/gif"
+	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -14,9 +16,34 @@ import (
 	"github.com/tomnomnom/xtermcolor"
 )
 
-//go:generate go-bindata "Happy B-Day 716.gif"
-
 func main() {
+
+	var loopCount int
+	var gifURL string
+	var err error
+
+	loopCount = -1
+
+	// Process Commandline Args
+	if len(os.Args) == 1 {
+		fmt.Println("Usage: asciiify [GIF URL] [LOOP COUNT]")
+		return
+	}
+	if len(os.Args) > 1 {
+		gifURL = os.Args[1]
+	}
+	if len(os.Args) > 2 {
+		loopCount, err = strconv.Atoi(os.Args[2])
+		if err != nil {
+			fmt.Println("Invalid Loop Count")
+			return
+		}
+		if loopCount <= 0 {
+			fmt.Println("Loop Count must be greater than 0")
+			return
+		}
+	}
+
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -25,6 +52,7 @@ func main() {
 		}
 	}()
 
+	// Initialize NCurses
 	stdscr, err := goncurses.Init()
 	if err != nil {
 		panic(err)
@@ -34,19 +62,23 @@ func main() {
 	goncurses.Cursor(0)
 	stdscr.ScrollOk(false)
 
-	gifData, err := Asset("Happy B-Day 716.gif")
+	// Read the Gif from the URL specified on the commandline
+	httpClient := http.Client{}
+	response, err := httpClient.Get(gifURL)
 	if err != nil {
 		panic(err)
 	}
 
-	gif, err := gif.DecodeAll(bytes.NewReader(gifData))
+	// Decode the GIF data from the response body
+	gif, err := gif.DecodeAll(response.Body)
 	if err != nil {
 		panic(err)
 	}
 
-	// don't make it repeating
-	gif.LoopCount = -1
+	// Initialize the Loop count
+	gif.LoopCount = loopCount
 
+	// Play the GIF as an ASCII NCurses Video
 	vid := asciiif.DecodeGIFStreamed(gif)
 
 	goncurses.StartColor()
